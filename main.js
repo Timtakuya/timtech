@@ -19,7 +19,7 @@ window.onload = function () {
   // ゲームで使用する画像ファイルを読み込む
   core.preload('background.png','sensuikan.png', 
         'sensuikan01.png', 'bullet.png', 'enemy03.png', 'player.png',
-        'clear.png');
+        'clear.png', 'effect0.png');
 
   core.onload = function() {
 
@@ -88,7 +88,7 @@ var Player = enchant.Class.create(enchant.Sprite, {
     // サーフィスを作成する
     var image = new Surface(128, 32);
     // 「spritesheet.png」の(0, 0)から128x32の領域の画像をサーフィスに描画する
-    image.draw(core.assets['spritesheet.png'], 0, 0, 128, 32, 0, 0, 128, 32);
+    image.draw(core.assets['player.png'], 0, 0, 128, 32, 0, 0, 128, 32);
     this.image = image;
     this.frame = 0;
     this.x = x;
@@ -123,7 +123,7 @@ var Background = enchant.Class.create(enchant.Sprite, {
     this.x = 0;
     this.y = -320;
     this.frame = 0;
-    this.image = core.assets['bg.png'];
+    this.image = core.assets['background.png'];
     // 「enterframe」イベントリスナ
     this.addEventListener('enterframe', function() {
       // 背景をy方向にスクロールする
@@ -139,7 +139,7 @@ var Background = enchant.Class.create(enchant.Sprite, {
 var Enemy = enchant.Class.create(enchant.Sprite, {
   initialize: function(x, y, type) {
     enchant.Sprite.call(this, 32, 32);
-    this.image = core.assets['spritesheet.png'];
+    this.image = core.assets['enemy03.png'];
     this.x = x; 
     this.y = y;
     this.vx = 4;      // x方向の移動量
@@ -208,7 +208,7 @@ var Bullet = enchant.Class.create(enchant.Sprite, {
   initialize: function(x, y, angle) {
     enchant.Sprite.call(this, 8, 8);
     var image = new Surface(32, 32);
-    image.draw(core.assets['spritesheet.png'], 32, 64, 32, 32, 0, 0, 32, 32);
+    image.draw(core.assets['bullet.png'], 32, 64, 32, 32, 0, 0, 32, 32);
     this.image = image;
     this.x = x;
     this.y = y;
@@ -287,7 +287,7 @@ var Explosion = enchant.Class.create(enchant.Sprite, {
     this.x = x;
     this.y = y;
     this.frame = 0;
-    this.image = core.assets['exp.png'];
+    this.image = core.assets['effect0.png'];
     this.tick = 0;      // フレーム数のカウンタ 
     // 「enterframe」イベントリスナ
     this.addEventListener('enterframe', function() {
