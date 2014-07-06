@@ -1,15 +1,15 @@
 window.onload = function () {
 	enchant();
-	var game = new Core (1200, 480);
+	var game = new Core (700, 480);
 
-	game.preload('background.png','sensuikan.png', 'sensuikan01.png','bullet01.png');
+	game.preload('background.png','sensuikan.png', 'sensuikan01.png','bullet01.png', 'bullet.png');
 	
 	game.onload = function () {
 
 		var Shot = enchant.Class.create(enchant.Sprite, {
 			initialize : function(x, y) {
-				enchant.Sprite.call(this, 36, 153);
-				this.image = game.assets['bullet01.png'];
+				enchant.Sprite.call(this, 16, 16);
+				this.image = game.assets['bullet.png'];
 				this.x = x;
 				this.y = y;
 			},
@@ -62,7 +62,7 @@ window.onload = function () {
 
         var Enemy = enchant.Class.create(enchant.Sprite, {
         	initialize : function (x,y) {
-        		enchant.Sprite.call(this, 60, 60);
+        		enchant.Sprite.call(this, 100, 75);
         		this.image = game.assets['sensuikan01.png'];
         		this.x = x;
         		this.y = y;
