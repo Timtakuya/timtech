@@ -19,7 +19,7 @@ window.onload = function () {
   // ゲームで使用する画像ファイルを読み込む
   core.preload('background.png','sensuikan.png', 
         'sensuikan01.png', 'bullet.png', 'enemy03.png', 'player.png',
-        'clear.png', 'effect0.png');
+        'clear.png', 'effect0.png','spritesheet.png');
 
   core.onload = function() {
 
@@ -139,7 +139,7 @@ var Background = enchant.Class.create(enchant.Sprite, {
 var Enemy = enchant.Class.create(enchant.Sprite, {
   initialize: function(x, y, type) {
     enchant.Sprite.call(this, 32, 32);
-    this.image = core.assets['enemy03.png'];
+    this.image = core.assets['spritesheet.png'];
     this.x = x; 
     this.y = y;
     this.vx = 4;      // x方向の移動量
@@ -208,7 +208,7 @@ var Bullet = enchant.Class.create(enchant.Sprite, {
   initialize: function(x, y, angle) {
     enchant.Sprite.call(this, 8, 8);
     var image = new Surface(32, 32);
-    image.draw(core.assets['bullet.png'], 32, 64, 32, 32, 0, 0, 32, 32);
+    image.draw(core.assets['spritesheet.png'], 32, 64, 32, 32, 0, 0, 32, 32);
     this.image = image;
     this.x = x;
     this.y = y;
