@@ -2,7 +2,7 @@ window.onload = function () {
 	enchant();
 	var game = new Core (700, 480);
 
-	game.preload('background.png','sensuikan.png', 'sensuikan01.png','bullet01.png', 'bullet.png');
+	game.preload('background.png','sensuikan.png', 'sensuikan01.png','bullet01.png', 'bullet.png', 'enemy03.png');
 	
 	game.onload = function () {
 
@@ -74,6 +74,22 @@ window.onload = function () {
         		}
         		this.y++;
         	},
+        });
+
+        var Enemy1 = enchant.Class.create(enchant.Sprite, {
+            initialize : function (x,y) {
+                enchant.Sprite.call(this, 100, 75);
+                this.image = game.assets['enemy03.png'];
+                this.x = x;
+                this.y = y;
+            },
+
+            onenterframe : function(){
+                if (this.y > game.height + this.height){
+                    this.scene.removeChild(this);
+                }
+                this.y++;
+            },
         });
 
 		var background = new Sprite(1200,480);
