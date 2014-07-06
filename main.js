@@ -88,7 +88,7 @@ var Player = enchant.Class.create(enchant.Sprite, {
     // サーフィスを作成する
     var image = new Surface(128, 32);
     // 「spritesheet.png」の(0, 0)から128x32の領域の画像をサーフィスに描画する
-    image.draw(core.assets['player.png'], 0, 0, 128, 32, 0, 0, 128, 32);
+    image.draw(core.assets['spritesheet.png'], 0, 0, 128, 32, 0, 0, 128, 32);
     this.image = image;
     this.frame = 0;
     this.x = x;
