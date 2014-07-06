@@ -1,149 +1,304 @@
-window.onload = function () {
-	enchant();
-	var game = new Core (700, 480);
+enchant();
 
-	game.preload('background.png','sensuikan.png', 
+window.onload = function () {
+
+  core =new Core(320, 320);
+  core.fps = 24;
+
+  // スコアを保持するプロパティ
+  core.score = 0;
+  // ライフを保持するプロパティ
+  core.life = 3;
+  // ウェイトのカウンタ
+  core.wait = 0;
+  // 自機の死亡フラグ(被弾したときに「true」)
+  core.death = false;
+  // ゲームオーバーフラグ(ゲームオーバー時に「true」)
+  core.over = false;
+
+  // ゲームで使用する画像ファイルを読み込む
+  core.preload('background.png','sensuikan.png', 
         'sensuikan01.png', 'bullet.png', 'enemy03.png', 'player.png',
         'clear.png');
-	
-	game.onload = function () {
 
-        
-
-　　　　　//自弾
-		var Shot = enchant.Class.create(enchant.Sprite, {
-			initialize : function(x, y) {
-				enchant.Sprite.call(this, 16, 16);
-				this.image = game.assets['bullet.png'];
-				this.x = x;
-				this.y = y;
-                this.speed = 6;
-			},
-            onenterframe : function (){
-                if (this.y < 0){
-                    this.scene.removeChild(this);
-                }
-                this.y -= 30;
-            }
-		});
-
-　　　　　//敵弾
-        var EnemyBullet = enchant.Class.create(enchant.Sprite,{
-            initialize : function(x, y){
-                enchant.Sprite.call(this, 16, 16);
-                this.image = game.assets['bullet.png'];
-                this.x = x;
-                this.y = y;
-                this.speed = 30;
-            },
-            onenterframe : function (){
-                if (this.y < 0){
-                    this.scene.removeChild(this);
-                }
-                this.y += 30;
-            }
-        });
-
-　　　　　//自機
-        var Sensuikan = enchant.Class.create(enchant.Sprite, {
-        	
-        	initialize : function() {
-        		enchant.Sprite.call(this, 16, 16);
-        		this.image = game.assets['player.png'];
-        		this.x = game.width / 2 - this.width / 2;
-        		this.y = game.height - 30;
-        	},
-        	onenterframe : function(){
-        		if (game.frame % 16 != 0) {
-        			return;
-        	    }
-        	    bullet = new Shot (this.x, this.y - 16);
-        	    game.rootScene.addChild(bullet);
-                
-                if (apad.isTouched === true) {
-                    this.x += apad.vx*4;
-                    this.y += apad.vy*4;
-                }
-            },
-        });
+  core.onload = function() {
 
 
-　　　　　//敵機
-        var Enemy = enchant.Class.create(enchant.Sprite, {
-        	initialize : function (x,y) {
-        		enchant.Sprite.call(this, 100, 75);
-        		this.image = game.assets['sensuikan01.png'];
-        		this.x = x;
-        		this.y = y;
-        	},
+    // 背景を作成する
+    background = new Background();
+    
+    // 自機を作成する
+    player = new Player(144, 138);
 
-        	onenterframe : function(){
-        		if (this.y > game.height + this.height){
-        			this.scene.removeChild(this);
-        		}
-        		this.y++;
-                if (game.frame % 16 != 0){
-                    return;
-                }
-                bullet = new EnemyBullet (this.x, this.y -16);
-                game.rootScene.addChild(bullet);
-        	},
-        });
-        var enemy_score = 100;
+    // スコアラベルを作成する
+    var scoreLabel = new ScoreLabel(5, 0);
+    scoreLabel.score = 0;
+    scoreLabel.easing = 0;
+    core.rootScene.addChild(scoreLabel);
+    
+    // ライフラベルを作成する
+    var lifeLabel = new LifeLabel(180, 0, 3);
+    core.rootScene.addChild(lifeLabel);
+    
+    // アナログバーチャルパッドを作成する
+    apad = new APad();
+    apad.x = 220;
+    apad.y = 220;
+    core.rootScene.addChild(apad);
 
+    // 敵を格納する配列
+    enemies = [];
 
-         //背景
-        var background = new Sprite(1200,480);
-        background.image = game.assets['background.png'];
-        game.rootScene.addChild(background);
-
-　　　　　//アナログパッド  
-        var apad = new APad();
-        apad.moveTo(0, 300);
-        game.rootScene.addChild(apad);
-
-　　　　　//自機生成
-        var sensuikan = new Sensuikan ();
-        game.rootScene.addChild(sensuikan);
-        
-        game.rootScene.ontouchmove = function (touch) {
-            sensuikan.x = touch.x - sensuikan.width / 2;
+    // rootSceneの「enterframe」イベントリスナ
+    core.rootScene.addEventListener('enterframe', function() {
+      
+      // スコアを更新する
+      scoreLabel.score = core.score;
+      // ライフを更新する
+      lifeLabel.life = core.life;
+      // ゲームオーバーなら終了
+      if (core.over) core.end();
+      // 被弾したら、一定の間、自機を点滅表示する
+      if (core.death == true) {
+        core.wait ++;
+        player.visible = player.visible ? false : true;
+        if (core.wait == core.fps * 5) {
+          core.death = false;
+          player.visible = true;
+          core.wait = 0;
         }
+      }
+      // 敵の生成処理
+      if (rand(100) < 5  && core.death == false) {
+        var enemy = new Enemy(rand(320), 0, rand(3));
+        enemy.id = core.frame;
+        enemies[enemy.id] = enemy;
+      }
 
-　　　　　//スコア表示
-        var scoreLabel = new ScoreLabel(game.width / 2, 0);
-        game.rootScene.addChild(scoreLabel);
+    });
 
-　　　　　//時間表示
-        var timeLabel = new TimeLabel(0, 0, 'countdown');
-        timeLabel.time = 30;
-        timeLabel.onenterframe = function (){
-            if (timeLabel.time <=0) {
-                game.end(scoreLabel.score, scoreLabel.score + '点！', game.assets['clear.png']);
-            }
-        }  
-        
-        game.rootScene.addChild(timeLabel);
-
-
-　　　　　//ライフ表示
-        var lifeLabel = new LifeLabel(180, 0, 3);
-        game.rootScene.addChild(lifeLabel);
-
-        game.rootScene.onenterframe = function() {
-            if (game.frame % 60 == 0) {
-                var enemy = new Enemy(Math.random() * (game.width - 16), -16);
-                this.addChild(enemy);
-            }
-　　　　　　　//敵破壊時
-            var collidingPairs = Enemy.intersect(Shot);
-            collidingPairs.forEach(function(pair){
-                game.rootScene.removeChild(pair[0]);
-                game.rootScene.removeChild(pair[1]);
-                scoreLabel.score += enemy_score;
-            });
-            game.rootScene.addChild(this);
-        }
-    }
-    game.start();
+  }
+  core.start();
 }
+
+// 自機のスプライトを作成するクラス
+var Player = enchant.Class.create(enchant.Sprite, {
+  initialize: function(x, y) {
+    enchant.Sprite.call(this, 32, 32);
+    // サーフィスを作成する
+    var image = new Surface(128, 32);
+    // 「spritesheet.png」の(0, 0)から128x32の領域の画像をサーフィスに描画する
+    image.draw(core.assets['spritesheet.png'], 0, 0, 128, 32, 0, 0, 128, 32);
+    this.image = image;
+    this.frame = 0;
+    this.x = x;
+    this.y = y;
+    // 「enterframe」イベントリスナ
+    this.addEventListener('enterframe', function() {
+      
+      // 自機の移動処理
+      
+      // スプライトのフレーム切り替え
+      if (apad.vy < 0) this.frame = 1;
+      if (apad.vy > 0) this.frame = 2;
+      if (apad.vy == 0) this.frame = 0;
+      
+      // アナログパッドの傾きをゲーム画面の座標系に変換する
+      this.x = apad.vx * core.width / 2  + x;
+      this.y = apad.vy * core.height / 2  + y;
+      // 8フレーム毎に弾を発射する
+      if (core.frame % 8 == 0) {
+        // 自弾を生成する
+        var s = new PlayerBullet(this.x + 12, this.y - 8);
+      }
+    });
+    core.rootScene.addChild(this);
+  }
+});
+
+// 背景のスプライトを作成するクラス
+var Background = enchant.Class.create(enchant.Sprite, {
+  initialize: function() {
+    enchant.Sprite.call(this, 320, 640);
+    this.x = 0;
+    this.y = -320;
+    this.frame = 0;
+    this.image = core.assets['bg.png'];
+    // 「enterframe」イベントリスナ
+    this.addEventListener('enterframe', function() {
+      // 背景をy方向にスクロールする
+      this.y ++;
+      // y座標が「0」以上になったら、y座標を最初の位置「-320」に戻す
+      if (this.y >= 0) this.y = -320;
+    });
+    core.rootScene.addChild(this);
+  }
+});
+
+// 敵のスプライトを作成するクラス
+var Enemy = enchant.Class.create(enchant.Sprite, {
+  initialize: function(x, y, type) {
+    enchant.Sprite.call(this, 32, 32);
+    this.image = core.assets['spritesheet.png'];
+    this.x = x; 
+    this.y = y;
+    this.vx = 4;      // x方向の移動量
+    this.type = type; // 敵の種類を設定するプロパティ
+
+    this.tick = 0;    // フレーム数のカウンタ
+    this.angle = 0;   // 弾の発射角度を設定するプロパティ
+
+    // 「enterframe」イベントリスナ
+    this.addEventListener('enterframe', function() {
+
+      // 敵のタイプに応じて、表示するフレームと移動パターンを設定する
+      
+      // タイプ「0」
+      if (this.type == 0) {
+        this.frame = 15 + core.frame % 3;
+        this.y += 3;
+      }
+
+      // タイプ「1」
+      if (this.type == 1) {
+        this.frame = 22 + core.frame % 3;
+        this.y += 6;
+      }
+
+      // タイプ「2」
+      if (this.type == 2) {
+        this.frame = 25 + core.frame % 4;
+        if (this.x < player.x - 64) {
+          this.x += this.vx 
+        } else if (this.x > player.x + 64) {
+          this.x -= this.vx;
+        } else {
+          this.vx = 0;
+          this.y += 8;
+        }
+      }
+      
+      // 画面の外に出たら、
+      if (this.y > 280 || this.x > 320 || this.x < -this.width || this.y < -this.height) {
+        // 消す
+        this.remove();
+      } else if(this.tick++ % 32 == 0 ) {
+      // 画面内にいるなら、「32」フレーム毎に、次の弾を発射する処理を実行する
+        if (rand(100) < 50) {
+          // 自機と敵の位置から弾の発射角度を求める
+          var sx = player.x + player.width / 2 - this.x;
+          var sy = player.y + player.height / 2- this.y;
+          var angle = Math.atan(sx / sy);
+          // 弾を発射する
+          var s = new EnamyBullet(this.x + this.width / 2, this.y + this.height / 2 ,angle);
+        }
+      }   
+    });
+    core.rootScene.addChild(this);
+  },
+  remove: function() {
+    core.rootScene.removeChild(this);
+    delete enemies[this.id];
+    delete this;
+  }
+});
+
+// 弾のスプライトを作成するクラス
+var Bullet = enchant.Class.create(enchant.Sprite, {
+  initialize: function(x, y, angle) {
+    enchant.Sprite.call(this, 8, 8);
+    var image = new Surface(32, 32);
+    image.draw(core.assets['spritesheet.png'], 32, 64, 32, 32, 0, 0, 32, 32);
+    this.image = image;
+    this.x = x;
+    this.y = y;
+    this.angle = angle; // 角度
+    this.speed = 10;    // スピード
+    // 「enterframe」イベントリスナ
+    this.addEventListener('enterframe', function() {
+      // 弾の移動処理
+      this.x += this.speed * Math.sin(this.angle);
+      this.y += this.speed * Math.cos(this.angle);
+      // 画面の外に出たら消去する
+      if (this.y > 320 || this.x > 320 || this.x < -this.width || this.y < -this.height) {
+        this.remove();
+      }
+    });
+    core.rootScene.addChild(this);
+  },
+  remove: function() {
+    core.rootScene.removeChild(this);
+    delete this;
+  }
+});
+
+// 自弾のスプライトを作成するクラス
+var PlayerBullet = enchant.Class.create(Bullet, {
+  initialize: function(x, y) {
+    Bullet.call(this, x, y, Math.PI);
+    this.frame = 10;
+    // 「enterframe」イベントリスナ
+    this.addEventListener('enterframe', function() {
+      // 敵との当たり判定
+      for (var i in enemies) {
+        // 敵に当たったら、
+        if (enemies[i].intersect(this)) {
+          // 爆発エフェクトを表示する
+          var effect = new Explosion(enemies[i].x - enemies[i].width / 2, enemies[i].y - enemies[i].height / 2);
+          // 当たった敵を消去する
+          enemies[i].remove();
+          // スコアを加算する
+          core.score += 100;
+        }
+      }
+    });
+  }
+});
+
+// 敵弾のスプライトを作成するクラス
+var EnamyBullet = enchant.Class.create(Bullet, {
+  initialize: function(x, y, angle) {
+    Bullet.call(this, x, y, angle);
+    this.speed = 4; // スピード
+    this.frame = 7;
+    // 「enterframe」イベントリスナ
+    this.addEventListener('enterframe', function() {
+      // 自機との当たり判定
+      // 自機に当たったら
+      if (player.within(this, 8) && core.death == false) {
+        // 爆発エフェクトを表示する
+        var effect = new Explosion(player.x - player.width / 2, player.y - player.height / 2);
+        core.death = true;
+        player.visible = false;
+        // ライフを1つ減らす
+        core.life--;
+        // ライフが「0」ならゲームオーバーフラグを「true」にする
+        if (core.life == 0 ) core.over = true;
+      }
+    });
+  }
+});
+
+
+// 爆発エフェクトのスプライトを作成するクラス
+var Explosion = enchant.Class.create(enchant.Sprite, {
+  initialize: function(x, y) {
+    enchant.Sprite.call(this, 64, 64);
+    this.x = x;
+    this.y = y;
+    this.frame = 0;
+    this.image = core.assets['exp.png'];
+    this.tick = 0;      // フレーム数のカウンタ 
+    // 「enterframe」イベントリスナ
+    this.addEventListener('enterframe', function() {
+      // 爆発エフェクトをアニメーション表示する
+      this.frame = this.tick ++;
+      if (this.frame == 16) this.remove();
+    });
+    core.rootScene.addChild(this);
+  },
+  remove: function() {
+    core.rootScene.removeChild(this);
+    delete this;
+  }
+});
