@@ -1,302 +1,276 @@
-enchant();
-
 window.onload = function () {
+	enchant();
+	
+  game = new Core (320, 480);
+    
+    game.preload('background.png','sensuikan.png', 
+        'sensuikan01.png', 'bullet.png', 
+        'clear.png', 'effect0.png','spritesheet.png', 'exp.png', 'start.png');
 
-  core =new Core(320, 290);
-  core.fps = 24;
-
-  // スコア
-  core.score = 0;
-  // ライフ
-  core.life = 3;
-  // ウェイトのカウンタ
-  core.wait = 0;
-  // 自機の死亡
-  core.death = false;
-  // ゲームオーバー
-  core.over = false;
-
-  
-  core.preload('background.png','sensuikan.png', 
-        'sensuikan01.png', 'bullet.png', 'enemy03.png', 'player.png',
-        'clear.png', 'effect0.png','spritesheet.png', 'exp.png');
-
-  core.onload = function() { 
+	game.onload = function () {
 
     
-    background = new Background();
-    
-    
-    player = new Player(144, 138);
+    var createStartScene = function() {
 
-    
-    var scoreLabel = new ScoreLabel(5, 0);
-    scoreLabel.score = 0;
-    scoreLabel.easing = 0;
-    core.rootScene.addChild(scoreLabel);
-    
-    
-    var lifeLabel = new LifeLabel(180, 0, 3);
-    core.rootScene.addChild(lifeLabel);
-    
-    //アナログ
-    apad = new APad();
-    apad.x = 220;
-    apad.y = 220;
-    core.rootScene.addChild(apad);
+            var background = new Sprite (320,480);
+            background.image = game.assets['background.png'];
+            game.rootScene.addChild(background);
 
-    
-    enemies = [];
+            var scene = new Scene();                   // 新しいシーンを作る
+            scene.image = game.assets['background.png']       // シーンの背景色を設定
 
+            // スタート画像設定
+            var startImage = new Sprite(236, 48);
+            startImage.image = game.assets['start.png']; 
+                 // スプライトを作る
+            // 画像を設定
+            startImage.x = 38;                         // 横位置調整
+            startImage.y = 215;                        // 縦位置調整
+            scene.addChild(startImage);                // シーンに追加
+
+            // タイトルラベル設定
+            var title = new Label('深海脱出ゲーム');   // ラベルを作る
+            title.width = 320;
+            title.textAlign = 'center';                // 文字を中央寄せ
+            title.color = '#ffffff';                   // 文字を白色に
+            title.x = 0;                               // 横位置調整
+            title.y = 70;                              // 縦位置調整
+            title.font = '44px sans-serif';            // 28pxのゴシック体にする
+            scene.addChild(title);                     // シーンに追加
+
+            // 説明ラベル設定
+            var info = new Label('STARTを押して開始'); // ラベルを作る
+            info.width = 320;
+            info.textAlign = 'center';                 // 文字を中央寄せ
+            info.color = '#ffffff';                    // 文字を白色に
+            info.x = 0;                                // 横位置調整
+            info.y = 300;                              // 縦位置調整
+            info.font = '16px sans-serif';             // 28pxのゴシック体にする
+            scene.addChild(info);                      // シーンに追加
+
+            // スタート画像にタッチイベントを設定
+            startImage.addEventListener(Event.TOUCH_START, function(e) {
+                // 現在表示しているシーンをゲームシーンに置き換える
+                game.replaceScene(createGameScene());
+            });
+
+            // タイトルシーンを返します。
+            return scene;
+      };
+
+      var createGameScene = function() {
+
+            var scroll = 0; // スクロール量を記録する変数
+
+            // 固定の値であることをわかりやすくするために大文字で書いています
+            // 固定の値は「定数」と呼ばれ、言語によっては別の書き方をする場合があります
+            // JavaScriptにもconstという書き方がありますが、対応していないブラウザがあるため使っていません
+            var SCROLL_SPEED = 1; 
+            var groundline = 250;  // スクロールの速さ(固定)
+
+            var scene = new Scene();                   // 新しいシーンをつくる
+            scene.backgroundColor = '#fff';         // シーンの背景色を設定
+
+            // スクロールする背景1の設定
+            var bg1 = new Sprite(320, 480);            // スプライトをつくる
+            scene.backgroundColor = '#000053'; // 画像を設定
+            bg1.x = 0;                                 // 横位置調整
+            bg1.y = 0;                                 // 縦位置調整
+            scene.addChild(bg1);                       // シーンに追加
+
+            // スクロールする背景2の設定
+            var bg2 = new Sprite(320, 480);            // スプライトをつくる
+            bg2.image = game.assets['background.png']; // 画像を設定
+            bg2.x = 480;                               // 横位置調整 320px右に配置(bg1の右隣に隙間なく並べる)
+            bg2.y = 0;                                 // 縦位置調整
+            scene.addChild(bg2);                       // シーンに追加
+
+            // スコア表示用ラベルの設定
+            var scoreLabel = new Label("地上まで");            // ラベルをつくる
+            scoreLabel.color = '#fff';                 // 白色に設定
+            scene.addChild(scoreLabel);  
+
+                    // シーンに追加
+
+            var player = new Sprite(100, 80);
+                  player.image = game.assets['sensuikan01.png'];
+                  player.x = 150;
+                  player.y = 300;
+                  player.scaleX = 1;
+                  player.scaleY = 1;
+                  player.frame = 4;
+                  
+                  scene.addChild(player);
+             
+            var PlayerBullet = new Sprite(100,100);
+                      PlayerBullet.image = game.assets['bullet.png'];
+                      PlayerBullet.x = player.x;
+                      PlayerBullet.y = player.y;
+                      PlayerBullet.onenterframe = function(){
+                      
+                       
+                      if (this.y < 0) {
+                         this.scene.removeChild(this);
+                      }
+                      this.y -=8;
+
+                     
+                      if(PlayerBullet.y > 480){
+                         scene.removeChild(PlayerBullet);
+                        }
+                    };
+           scene.addChild(PlayerBullet);
+
+            var ten = new Sprite(32, 32);
+            ten. image = game.assets['spritesheet.png'];
+            ten.x = 100;
+            ten.y = 100;
+            scene.addChild(ten);
+
+            var playergoal = function(){
+                game.pushScene(createGameoverScene(scroll));
+            }
+
+            // 毎フレームイベントをシーンに追加
+            scene.addEventListener(Event.ENTER_FRAME, function(){
+
+                scroll += SCROLL_SPEED;
+                scrolla = 3000-scroll;                       // 走った距離を記録
+                scoreLabel.text ='地上まで' + scrolla.toString()+'㍍'; // スコア表示を更新
+
+
+                if(scroll === 3000){
+                    playergoal();
+                }
+
+                if(scroll === 2800){
+                    ten.y = 10;
+                }
+
+                                           
+                var lifeLabel = new LifeLabel(180, 0, 3);
+                scene.addChild(lifeLabel);
     
-    core.rootScene.addEventListener('enterframe', function() {
-      
-      
-      scoreLabel.score = core.score;
-      
-      lifeLabel.life = core.life;
-      
-      if (core.over) core.end();
-      
-      if (core.death == true) {
-        core.wait ++;
-        player.visible = player.visible ? false : true;
-        if (core.wait == core.fps * 5) {
-          core.death = false;
-          player.visible = true;
-          core.wait = 0;
+                
+
+               // 敵を格納する配列
+                enemies = [];
+
+                if (rand(100) < 5  && game.death == false) {
+                  var enemy = new enemy(rand(320), 0, rand(3));
+                  enemy.id = game.frame;
+                  enemies[enemy.id] = enemy;
+                }
+
+
+            });
+            //ゲームシーンを返します
+         return scene;
         }
-      }
-      
-      if (rand(100) < 5  && core.death == false) {
-        var enemy = new Enemy(rand(320), 0, rand(3));
-        enemy.id = core.frame;
-        enemies[enemy.id] = enemy;
-      }
 
-    });
+          　　　/*ゴールシーン*/
+            var creategoalScene=function(scroll){
+                var scene =new Scene();
+                scene.backgroundColor='#228b22'
 
-  }
-  core.start();
+
+                var goal=new Sprite(320,225);
+                goal.image=game.assets['goal.png'];
+                goal.x=0;
+                goal.y=70;
+                scene.addChild(goal);
+
+                var clear=new Sprite(267,48);
+                clear.image=game.assets['clear.png'];
+                clear.x=30;
+                clear.y=260;
+                scene.addChild(clear);
+
+                var endlabel=new Label('空気がうまい!');
+                endlabel.width=320;
+                endlabel.textAlign='center';
+                endlabel.color='#eee8aa';
+                endlabel.x=0;
+                endlabel.y=40;
+                endlabel.font='50px sans-serif';
+                endlabel.fontWeight='bolder';
+                scene.addChild(endlabel);
+
+
+                return scene;
+
+            }
+
+
+        /**
+        * ゲームオーバーシーン
+        *
+        * ゲームオーバーシーンを作り、返す関数です。
+        */
+        var createGameoverScene = function(scroll) {
+
+                                     // シーンに追加
+            var scene = new Scene();                                   // 新しいシーンを作る
+            scene.backgroundColor = 'rgba(0, 0, 0, 0.5)';              // シーンの背景色を設定
+
+            // ゲームオーバー画像を設定
+            var gameoverImage = new Sprite(189, 97);                   // スプライトを作る
+            gameoverImage.image = game.assets['end.png'];  // 画像を設定
+            gameoverImage.x = 70;                                      // 横位置調整
+            gameoverImage.y = 50;                                     // 縦位置調整
+            scene.addChild(gameoverImage);                             // シーンに追加
+
+            // リトライボタンを設定
+            var buttonRetry = new Sprite(320, 32);                     // スプライトを作る
+            var info = new Label('クリックしてもう一度'); // ラベルを作る
+            info.width = 320;
+            info.textAlign = 'center';                 // 文字を中央寄せ
+            info.color = '#ffffff';                    // 文字を白色に
+            info.x = 0;                                // 横位置調整
+            info.y = 180;                              // 縦位置調整
+            info.font = '16px sans-serif';             // 28pxのゴシック体にする
+            scene.addChild(info);                      // シーンに追加
+            buttonRetry.x = 0;                                         // 横位置調整
+            buttonRetry.y = 180;                                       // 縦位置調整
+                                          // シーンに追加
+
+            // リトライボタンにタッチイベントを追加する
+            buttonRetry.addEventListener(Event.TOUCH_END, function(){
+                game.popScene();                                      // このシーンを剥がす（pop）
+                game.replaceScene(createStartScene());                // ゲームシーンをタイトルシーンと入れ替える(replace)
+            });
+            scene.addChild(buttonRetry);
+            return scene;
+
+            // スコア表示用ラベルの設定
+            var scoreLabel = new Label(scroll.toString());                        // ラベルを作る
+            scoreLabel.width = 320;                                    // 幅を設定
+            scoreLabel.textAlign = 'center';                           // 文字を中央寄せ
+            scoreLabel.color = '#ffffff';                              // 文字を白色に
+            scoreLabel.x = 0;                                          // 横位置調整
+            scoreLabel.y = 12;                                         // 縦位置調整
+            scoreLabel.font = '96px sans-serif';                       // 28pxのゴシック体にする
+            scene.addChild(scoreLabel);                                // シーンに追加
+
+            // スコア説明ラベル設定
+            var scoreInfoLabel = new Label('㍍走り抜いた');            // ラベルを作る
+            scoreInfoLabel.width = 320;                                // 幅を設定
+            scoreInfoLabel.textAlign = 'center';                       // 文字を中央寄せ
+            scoreInfoLabel.color = '#ffffff';                          // 文字を白色に
+            scoreInfoLabel.x = 0;                                      // 横位置調整
+            scoreInfoLabel.y = 330;                                    // 縦位置調整
+            scoreInfoLabel.font = '32px sans-serif';                   // 28pxのゴシック体にする
+            scene.addChild(scoreInfoLabel);   
+
+            
+            // ゲームオーバーシーンを返します。
+            return scene;
+
+        };
+
+
+        // ゲームの_rootSceneをスタートシーンに置き換える
+        game.replaceScene(createStartScene());
+    }
+	game.start();
 }
-
-// 自機
-var Player = enchant.Class.create(enchant.Sprite, {
-  initialize: function(x, y) {
-    enchant.Sprite.call(this, 32, 32);
-    
-    var image = new Surface(128, 32);
-    
-    image.draw(core.assets['spritesheet.png'], 0, 0, 128, 32, 0, 0, 128, 32);
-    this.image = image;
-    this.frame = 0;
-    this.x = x;
-    this.y = y;
-    
-    this.addEventListener('enterframe', function() {
-      
-      
-      
-      
-      if (apad.vy < 0) this.frame = 1;
-      if (apad.vy > 0) this.frame = 2;
-      if (apad.vy == 0) this.frame = 0;
-      
-      
-      this.x = apad.vx * core.width / 2  + x;
-      this.y = apad.vy * core.height / 2  + y;
-      // 8フレーム毎に弾を発射する
-      if (core.frame % 8 == 0) {
-        // 自弾を生成する
-        var s = new PlayerBullet(this.x + 12, this.y - 8);
-      }
-    });
-    core.rootScene.addChild(this);
-  }
-});
-
-// 背景
-var Background = enchant.Class.create(enchant.Sprite, {
-  initialize: function() {
-    enchant.Sprite.call(this, 320, 640);
-    this.x = 0;
-    this.y = -280;
-    this.frame = 0;
-    this.image = core.assets['background.png'];
-    
-    this.addEventListener('enterframe', function() {
-      // 背景をy方向
-      this.y ++;
-      
-      if (this.y >= 0) this.y = -280;
-    });
-    core.rootScene.addChild(this);
-  }
-});
-
-// 敵
-var Enemy = enchant.Class.create(enchant.Sprite, {
-  initialize: function(x, y, type) {
-    enchant.Sprite.call(this, 32, 32);
-    this.image = core.assets['spritesheet.png'];
-    this.x = x; 
-    this.y = y;
-    this.vx = 4;      
-    this.type = type; 
-
-    this.tick = 0;    
-    this.angle = 0;   
-
-    
-    this.addEventListener('enterframe', function() {
-
-      
-      
-      
-      if (this.type == 0) {
-        this.frame = 15 + core.frame % 3;
-        this.y += 3;
-      }
-
-      
-      if (this.type == 1) {
-        this.frame = 22 + core.frame % 3;
-        this.y += 6;
-      }
-
-      
-      if (this.type == 2) {
-        this.frame = 25 + core.frame % 4;
-        if (this.x < player.x - 64) {
-          this.x += this.vx 
-        } else if (this.x > player.x + 64) {
-          this.x -= this.vx;
-        } else {
-          this.vx = 0;
-          this.y += 8;
-        }
-      }
-      
-      
-      if (this.y > 280 || this.x > 320 || this.x < -this.width || this.y < -this.height) {
-        
-        this.remove();
-      } else if(this.tick++ % 32 == 0 ) {
-      
-        if (rand(100) < 50) {
-          
-          var sx = player.x + player.width / 2 - this.x;
-          var sy = player.y + player.height / 2- this.y;
-          var angle = Math.atan(sx / sy);
-          var s = new EnamyBullet(this.x + this.width / 2, this.y + this.height / 2 ,angle);
-        }
-      }   
-    });
-    core.rootScene.addChild(this);
-  },
-  remove: function() {
-    core.rootScene.removeChild(this);
-    delete enemies[this.id];
-    delete this;
-  }
-});
-
-// 弾
-var Bullet = enchant.Class.create(enchant.Sprite, {
-  initialize: function(x, y, angle) {
-    enchant.Sprite.call(this, 8, 8);
-    var image = new Surface(32, 32);
-    image.draw(core.assets['spritesheet.png'], 32, 64, 32, 32, 0, 0, 32, 32);
-    this.image = image;
-    this.x = x;
-    this.y = y;
-    this.angle = angle; 
-    this.speed = 20;    
-    
-    this.addEventListener('enterframe', function() {
-      
-      this.x += this.speed * Math.sin(this.angle);
-      this.y += this.speed * Math.cos(this.angle);
-    
-      if (this.y > 320 || this.x > 320 || this.x < -this.width || this.y < -this.height) {
-        this.remove();
-      }
-    });
-    core.rootScene.addChild(this);
-  },
-  remove: function() {
-    core.rootScene.removeChild(this);
-    delete this;
-  }
-});
-
-// 自弾
-var PlayerBullet = enchant.Class.create(Bullet, {
-  initialize: function(x, y) {
-    Bullet.call(this, x, y, Math.PI);
-    this.frame = 10;
-    
-    this.addEventListener('enterframe', function() {
-      
-      for (var i in enemies) {
-        
-        if (enemies[i].intersect(this)) {
-          
-          var effect = new Explosion(enemies[i].x - enemies[i].width / 2, enemies[i].y - enemies[i].height / 2);
-          
-          enemies[i].remove();
-          
-          core.score += 100;  
-        }
-      }
-    });
-  }
-});
-
-// 敵弾
-var EnamyBullet = enchant.Class.create(Bullet, {
-  initialize: function(x, y, angle) {
-    Bullet.call(this, x, y, angle);
-    this.speed = 4; 
-    this.frame = 7;
-    
-    this.addEventListener('enterframe', function() {
-      
-      
-      if (player.within(this, 8) && core.death == false) {
-        
-        var effect = new Explosion(player.x - player.width / 2, player.y - player.height / 2);
-        core.death = true;
-        player.visible = false;
-        
-        core.life--;
-        
-        if (core.life == 0 ) core.over = true;
-      }
-    });
-  }
-});
-
-
-
-var Explosion = enchant.Class.create(enchant.Sprite, {
-  initialize: function(x, y) {
-    enchant.Sprite.call(this, 64, 64);
-    this.x = x;
-    this.y = y;
-    this.frame = 0;
-    this.image = core.assets['exp.png'];
-    this.tick = 0;      
-    
-    this.addEventListener('enterframe', function() {
-      
-      this.frame = this.tick ++;
-      if (this.frame == 16) this.remove();
-    });
-    core.rootScene.addChild(this);
-  },
-  remove: function() {
-    core.rootScene.removeChild(this);
-    delete this;
-  }
-});
