@@ -1,14 +1,13 @@
 window.onload = function () {
 	enchant();
 	var game = new Core (320, 480);
-  Core.image = game.assets['background1.png'];
-
     
-    game.preload('background.png','start.png','background1.png','tako.png','umi.mp3','sakana.png','enemy03.png', 'enemy01.png','sensuikan01.png', 'images.png', 'bullet.png',  'fire01.mp3');
-
+    game.preload('background.png','tako.png','sakana.png','enemy03.png', 'enemy01.png','sensuikan01.png', 'images.png', 'bullet.png', 'end.png', 'fire01.mp3');
 
 	game.onload = function () {
+
   
+
     var Shot = enchant.Class.create(enchant.Sprite, {
      initialize : function (x,y) {
         enchant.Sprite.call(this, 16, 16);
@@ -43,8 +42,6 @@ window.onload = function () {
         game.rootScene.addChild(bullet);
       }
     });
-   var sound = game.assets['umi.mp3'].play();
-   
 
    var Sensuikan = enchant.Class.create(enchant.Sprite, {
                
@@ -101,9 +98,6 @@ window.onload = function () {
         if (game.frame % 96 != 0) {
           return;
         }
-        if (this.within(player)){
-        scoreLabel.score -= 100;
-       }
         bullet = new EnemyShot (this.x, this.y + 16);
         game.rootScene.addChild(bullet);
       }
@@ -168,9 +162,6 @@ window.onload = function () {
         if (game.frame % 96 != 0) {
           return;
         }
-        if (this.within(player)){
-        scoreLabel.score -= 100;
-       }
         bullet = new EnemyShot (this.x, this.y + 16);
         game.rootScene.addChild(bullet);
       }
@@ -249,35 +240,13 @@ window.onload = function () {
       game.rootScene.addChild(sensuikan);
 
     var scoreLabel = new ScoreLabel(game.width / 2, 0);
-    scoreLabel.font = '20px "Arial"';
-    scoreLabel.color = '#ffffff';
-    scoreLabel.text = game.width-100;
-    game.rootScene.addChild(scoreLabel);
-
-      var gameOverLabel = new Label();
-     gameOverLabel.text = 'Game Over !!もう一回やるならリロード';
-     gameOverLabel.font = '16px "Arial"';
-     gameOverLabel.color = '#ffffff';
-     gameOverLabel.x = 26;
-     gameOverLabel.y = 100;
-    
-      //ゲームオーバーフレーム
-      var gameOverScene = new Scene();
-      gameOverScene.backgroundColor = 'black';
-      
-
+      game.rootScene.addChild(scoreLabel);
 
     var timeLabel = new TimeLabel(0,0, 'countdown');
       timeLabel.time = 60;
       timeLabel.onenterframe = function () {
       if (timeLabel.time <= 0){
-         scoreLabel.text ='スコア' + scoreLabel.score + 'でした！';
-         game.pushScene(gameOverScene);
-         gameOverScene.addChild(gameOverLabel);
-         gameOverScene.addChild(scoreLabel);
-         game.stop();
-         var sound = game.assets['fire01.mp3'].clone();
-         sound.play();
+         game.end(scoreLabel.score, scoreLabel.score + '点！');
         }
       } 
       game.rootScene.addChild(timeLabel);
@@ -301,12 +270,11 @@ window.onload = function () {
           game.rootScene.removeChild(pair[1]);
           scoreLabel.score += 100;
         });
-        var sound = game.assets['umi.mp3'].play();
         var collidingPairs = esa2.intersect(Shot);
         collidingPairs.forEach(function(pair) {
           game.rootScene.removeChild(pair[0]);
           game.rootScene.removeChild(pair[1]);
-          scoreLabel.score += 200;
+          scoreLabel.score += 300;
         });
         var collidingPairs = esa.intersect(Shot);
         collidingPairs.forEach(function(pair) {
